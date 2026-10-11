@@ -1,3 +1,21 @@
+# Clairy Natural Air Purifier de-cloud and Home Assistant integration
+
+If you own one, you probably know the story. I love my Clairy — it's a beautiful SMART pot, or at least it was supposed to be. The app never really fully worked, ever, and then the company decided to drop support altogether. We do not like that.
+
+I couldn't find any online community of Clairy enthusiasts, so I might as well start here.
+
+After moving mine to my office, I had a brainwave and decided to give Codex a shot at modifying the app.
+
+One evening later, I present to you: a local-only, de-clouded Natural Air Purifier.
+
+No cloud required, and it also integrates easily with Home Assistant.
+
+The pot is smart again.
+
+<img width="720" height="1600" alt="Working Android app" src="https://github.com/user-attachments/assets/cf385e6a-6a18-4762-ba61-532bb872bc79" />
+<img width="720" height="402" alt="Home Assistant Card" src="https://github.com/user-attachments/assets/59d96c6c-210d-4794-ba37-bee28b4c22b6" />
+
+
 # Clairy Local
 
 Unofficial community project for keeping first-generation **Clairy** natural air purifiers useful after the original cloud service became unavailable.
