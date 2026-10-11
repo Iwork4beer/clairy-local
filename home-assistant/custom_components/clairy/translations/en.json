@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Clairy",
+        "description": "Set up a local listener for first-generation Clairy air purifiers. No cloud account or credentials are required."
+      }
+    },
+    "abort": {
+      "already_configured": "Clairy is already configured."
+    }
+  }
+}
