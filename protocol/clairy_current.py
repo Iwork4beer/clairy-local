@@ -15,8 +15,8 @@ GET_ID = bytes.fromhex("02 09 00 ff ff 0c 00 00 02 13 03")
 GET_FIRMWARE = bytes.fromhex("02 09 00 ff ff 0f 01 00 02 02 19 03")
 
 
-def decode(data: bytes):
-    """Decode packet types whose format is already confirmed."""
+def decode(data: bytes, firmware_query: bool = False):
+    """Decode packet types whose format has been confirmed on hardware."""
     if len(data) >= 15 and data[5] == 13:
         serial = struct.unpack_from("<I", data, 8)[0]
         return {"type": "identity", "serial": f"{serial:09d}"}
@@ -35,6 +35,18 @@ def decode(data: bytes):
             "received_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
             "raw_hex": data.hex(),
         }
+
+    # Observed on physical hardware after GET_PARAMETER(parameter=2).
+    # Keep the numeric value separate from the marketing/internal beta label until
+    # the original app's mapping is fully documented.
+    if firmware_query and len(data) == 15 and data[5] == 0xFE:
+        payload_len = struct.unpack_from("<H", data, 6)[0]
+        if payload_len == 4:
+            return {
+                "type": "firmware_parameter",
+                "value": struct.unpack_from("<I", data, 8)[0],
+                "raw_hex": data.hex(),
+            }
 
     return None
 
@@ -111,7 +123,7 @@ def main():
         if args.ip and address[0] != args.ip:
             continue
 
-        decoded = decode(data)
+        decoded = decode(data, firmware_query=args.firmware)
         if decoded is not None:
             decoded["source_ip"] = address[0]
             if decoded["type"] == "identity":
