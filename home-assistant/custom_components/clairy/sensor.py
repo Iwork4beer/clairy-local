@@ -51,7 +51,7 @@ class ClairySensor(SensorEntity):
 
     @property
     def available(self) -> bool:
-        return self.manager.reading is not None
+        return self.manager.available
 
     @property
     def native_value(self):
