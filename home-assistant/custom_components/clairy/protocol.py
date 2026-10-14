@@ -9,6 +9,8 @@ from typing import Callable
 
 from .const import GET_ID, MULTICAST_GROUP, PORT
 
+STALE_AFTER_SECONDS = 180
+
 
 @dataclass
 class ClairyReading:
@@ -37,6 +39,12 @@ class ClairyManager:
         self.serial: str | None = None
         self.callbacks: set[Callable[[], None]] = set()
         self._probed: set[str] = set()
+        self._stale = True
+        self._stale_handle: asyncio.TimerHandle | None = None
+
+    @property
+    def available(self) -> bool:
+        return self.reading is not None and not self._stale
 
     async def start(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -50,6 +58,9 @@ class ClairyManager:
         )
 
     async def stop(self) -> None:
+        if self._stale_handle is not None:
+            self._stale_handle.cancel()
+            self._stale_handle = None
         if self.transport is not None:
             self.transport.close()
             self.transport = None
@@ -61,6 +72,19 @@ class ClairyManager:
     def _notify(self) -> None:
         for callback in tuple(self.callbacks):
             callback()
+
+    def _schedule_stale(self) -> None:
+        if self._stale_handle is not None:
+            self._stale_handle.cancel()
+        self._stale_handle = self.loop.call_later(
+            STALE_AFTER_SECONDS, self._mark_stale
+        )
+
+    def _mark_stale(self) -> None:
+        self._stale_handle = None
+        if not self._stale:
+            self._stale = True
+            self._notify()
 
     def process(self, data: bytes, source_ip: str) -> None:
         if len(data) >= 15 and data[5] == 13:
@@ -84,6 +108,8 @@ class ClairyManager:
             fan_speed=speed,
             received=datetime.now(timezone.utc),
         )
+        self._stale = False
+        self._schedule_stale()
         if source_ip not in self._probed and self.transport is not None:
             self._probed.add(source_ip)
             self.transport.sendto(GET_ID, (source_ip, PORT))
